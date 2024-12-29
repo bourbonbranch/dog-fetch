@@ -1,0 +1,63 @@
+const express = require('express');
+const axios = require('axios');
+const bodyParser = require('body-parser');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(bodyParser.json());
+
+app.get('/petango-data', async (req, res) => {
+  const soapRequest = `
+    <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+      <soap:Body>
+        <AnimalSearch xmlns="http://www.petango.com/">
+          <authkey>your-auth-key-here</authkey>
+          <speciesID>1</speciesID>
+          <sex>All</sex>
+          <ageGroup>All</ageGroup>
+          <location>Main</location>
+          <site>1</site>
+          <onHold>A</onHold>
+          <orderBy>Name</orderBy>
+          <primaryBreed></primaryBreed>
+          <secondaryBreed></secondaryBreed>
+          <MaxAmountOfRecords>100</MaxAmountOfRecords>
+          <stageID></stageID>
+          <orgId>USMS2</orgId>
+        </AnimalSearch>
+      </soap:Body>
+    </soap:Envelope>
+  `;
+
+  try {
+    const { data } = await axios.post(
+      'http://ws.petango.com/webservices/wsActiveAnimalSearch.asmx',
+      soapRequest,
+      {
+        headers: {
+          'Content-Type': 'text/xml',
+          SOAPAction: 'http://www.petango.com/AnimalSearch',
+        },
+      }
+    );
+
+    // Parse the response XML and extract the data
+    // You can use an XML-to-JSON library like `xml2js`
+    const jsonData = parseXMLToJSON(data); // Implement your own parsing
+    res.json(jsonData);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).send('Error fetching data');
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+// Helper function to parse XML to JSON (use a library like `xml2js` or similar)
+function parseXMLToJSON(xml) {
+  // Implement XML parsing logic here
+  return {}; // Replace with parsed JSON
+}
